@@ -49,4 +49,4 @@ def clean_and_save_transcripts(original_path:Path|str,destination_path:Path|str)
         output_path.write_text(data=cleaned_file,encoding='utf-8')
 
 if __name__ == "__main__":
-    clean_and_save_transcripts(original_path='./transcripts',destination_path='./cleaned_transcripts')
+    clean_and_save_transcripts(original_path='./data/raw',destination_path='./data/processed')
