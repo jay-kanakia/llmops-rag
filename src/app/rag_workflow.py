@@ -12,6 +12,15 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
+from langfuse import get_client
+
+langfuse = get_client()
+system_prompt = langfuse.get_prompt(
+    name='rag_app_system_prompt',
+    label = 'baseline',
+    type='text'
+)
+
 # Loading APIs
 load_dotenv()
 
@@ -84,9 +93,7 @@ def retrieve(state : RagState)->dict:
 def augmentation(state:RagState)->dict:
 
     prompt = ChatPromptTemplate.from_messages([
-        ('system',"""You are a helpful assistant. Answer the user query
-                      based on the given context only. If you do not know the answer
-                      say I don't know. Do not add any preamble to the response"""),
+        ('system',system_prompt.prompt),
         ('human',"context:{context}\n\nquery:{query}")
     ])
 
