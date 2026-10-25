@@ -14,10 +14,13 @@ from deepeval.evaluate.configs import AsyncConfig,DisplayConfig
 from deepeval.evaluate import evaluate
 from dotenv import load_dotenv
 from pathlib import Path
+from src.config.parameters_config import params_config
 
 load_dotenv()
 
-model = 'gpt-5.4-mini'
+eval_config= params_config.evaluation
+
+model = eval_config.judge_llm
 
 # defining in-built metrics
 recall = ContextualRecallMetric(model=model)
@@ -55,45 +58,51 @@ simple_explanation = GEval(
     model=model
 )
 
-# define the dataset path
-ROOT_DIR = Path(__file__).parent.parent.parent.parent
-DATASET_PATH = ROOT_DIR/"data"/"evaluation"/"eval_dataset"/"evaluation_dataset_final.json"
+def evaluate_app():
 
-if DATASET_PATH.exists():
-    dataset = EvaluationDataset()
+    # define the dataset path
+    ROOT_DIR = Path(__file__).parent.parent.parent.parent
+    DATASET_PATH = ROOT_DIR/"data"/"evaluation"/"eval_dataset"/"evaluation_dataset_final.json"
 
-    dataset.add_test_cases_from_json_file(
-        file_path=DATASET_PATH,
-        input_key_name="input",
-        actual_output_key_name="actual_output",
-        expected_output_key_name="expected_output",
-        retrieval_context_key_name="retrieval_context"
+    if DATASET_PATH.exists():
+        dataset = EvaluationDataset()
+
+        dataset.add_test_cases_from_json_file(
+            file_path=DATASET_PATH,
+            input_key_name="input",
+            actual_output_key_name="actual_output",
+            expected_output_key_name="expected_output",
+            retrieval_context_key_name="retrieval_context"
+        )
+
+    # store the test case in a list
+    test_case = dataset.test_cases
+
+    # defining config
+    EVALUATION_RESULT_PATH = ROOT_DIR/"reports"/eval_config.display_config.result_dir
+    EVALUTAION_REPORT_PATH = ROOT_DIR/"reports"/eval_config.display_config.report_dir
+
+    display_config = DisplayConfig(
+                verbose_mode=True,
+                results_folder=EVALUATION_RESULT_PATH.as_posix(),
+                file_type='md',
+                file_output_dir=EVALUTAION_REPORT_PATH.as_posix()
     )
 
-# store the test case in a list
-test_case = dataset.test_cases
+    async_config=AsyncConfig(
+            throttle_value=eval_config.async_config.throttle_value, 
+            max_concurrent=eval_config.async_config.max_concurrent
+        )
 
-# defining config
-EVALUATION_RESULT_PATH = ROOT_DIR/"reports"/"evaluation_results"
-EVALUTAION_REPORT_PATH = ROOT_DIR/"reports"/"evaluation_report"
-
-display_config = DisplayConfig(
-            verbose_mode=True,
-            results_folder=EVALUATION_RESULT_PATH.as_posix(),
-            file_type='md',
-            file_output_dir=EVALUTAION_REPORT_PATH.as_posix()
-)
-
-async_config=AsyncConfig(
-        throttle_value=3, max_concurrent=5
+    # evaluate the dataset
+    evaluate(
+        test_cases=test_case,
+        metrics=[
+            recall,precision,context_relevancy,answer_relevancy,answer_correctness,simple_explanation,faithfullness
+        ],
+        async_config=async_config,
+        display_config=display_config
     )
 
-# evaluate the dataset
-evaluate(
-    test_cases=test_case,
-    metrics=[
-        recall,precision,context_relevancy,answer_relevancy,answer_correctness,simple_explanation,faithfullness
-    ],
-    async_config=async_config,
-    display_config=display_config
-)
+if __name__ == "__main__":
+    evaluate_app()
