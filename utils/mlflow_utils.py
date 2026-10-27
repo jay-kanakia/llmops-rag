@@ -37,6 +37,20 @@ def get_metrics_from_run(experiment_id:str,tag_name:str):
 
     return all_metrics
 
+def get_metrics_from_stage(experiment_id:str,tag_name:str):
+    searched_runs = mlflow.search_runs(experiment_ids=[experiment_id],
+                                       filter_string=f"tags.stage = '{tag_name}'",
+                                       output_format="list")
+    metric = searched_runs[0].data.metrics
+    return metric
+
+def get_metric_info(run_id:str):
+    run_info = mlflow.get_run(run_id=run_id)
+    metric_info = run_info.data.metrics
+
+    return metric_info
+
+
 if __name__ == "__main__":
 
     # dagshub init
