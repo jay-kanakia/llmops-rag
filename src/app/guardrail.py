@@ -2,6 +2,7 @@ import numpy as np
 
 from pydantic import BaseModel,Field
 from langchain_openai import ChatOpenAI,OpenAIEmbeddings
+from langchain_core.prompts import PromptTemplate
 
 from guardrails import AsyncGuard
 from guardrails.classes import ValidationOutcome

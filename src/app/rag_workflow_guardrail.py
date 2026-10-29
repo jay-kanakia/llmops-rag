@@ -10,6 +10,7 @@ from guardrails.errors import ValidationError
 
 from src.app.clients import llm,app_config,logger
 from src.app.guardrail import validate_input,validate_retrieval,validate_output
+from src.app.vector_store import get_retriever
 
 langfuse = get_client()
 system_prompt = langfuse.get_prompt(
@@ -43,6 +44,7 @@ class GuardrailRAGState(TypedDict):
 def retrieve(state : GuardrailRAGState)->dict:
 
     query = state['query']
+    retriever = get_retriever()
     retrived_docs = retriever.invoke(query)
     context = "\n".join([doc.page_content for doc in retrived_docs])
 
